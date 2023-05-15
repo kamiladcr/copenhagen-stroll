@@ -1,6 +1,11 @@
+import os
+
+os.environ["USE_PYGEOS"] = "0"
+
 import geopandas as gpd
 import pandas as pd
 import numpy as np
+import pyarrow
 
 
 def update():
@@ -332,8 +337,9 @@ def update():
 	gcr["net migration trend"] = None
 	gcr.loc[gcr["net migration"] > 0, "net migration trend"] = "positive"
 	gcr.loc[gcr["net migration"] < 0, "net migration trend"] = "negative"
-	gcr.to_csv("df.csv", index=False)
+
+	return gpd.GeoDataFrame(gcr)
 
 
-def load():
-	return pd.read_csv("df.csv")
+def load(target_file="data.parquet"):
+	return gpd.read_parquet(target_file)
