@@ -338,7 +338,7 @@ def update():
 	gcr.loc[gcr["net migration"] > 0, "net migration trend"] = "positive"
 	gcr.loc[gcr["net migration"] < 0, "net migration trend"] = "negative"
 
-	return gpd.GeoDataFrame(gcr)
+	return gpd.GeoDataFrame(gcr).to_parquet('data.parquet')
 
 
 def load(target_file="data.parquet"):
