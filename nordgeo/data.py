@@ -251,13 +251,58 @@ def update():
     )
 
     df_dk["net migration"] = df_dk["to"] - df_dk["from"]
-
-
     df_dk["year"] = df_dk["year"].astype(str)
+
+    # load SE internal migration data by municipality
+    # Source: Migration by region, age and sex. Year 1997 - 2022
+
+    se_raw = pd.merge(
+        left=(
+            pd.read_csv("se_in.csv", sep=";", encoding="ISO-8859-1").melt(
+                id_vars=["region", "age"], var_name="year", value_name="to"
+            )
+        ),
+        right=(
+            pd.read_csv("se_out.csv", sep=" ", encoding="ISO-8859-1").melt(
+                id_vars=["region", "age"], var_name="year", value_name="from"
+            )
+        ),
+    ).rename(columns={"region": "municipality"})
+
+    def process_se(df):
+
+        df["municipality"] = df["municipality"].str[5:]
+        df["age group"] = df["age"].apply(map_age_group)
+
+        df = (
+            df.groupby(["municipality", "year", "age group"])
+            .agg(
+                {
+                    "to": "sum",
+                    "from": "sum",
+                }
+            )
+            .reset_index()
+        )
+
+        df["net migration"] = df["to"] - df["from"]
+        return df
+
+    df_se = process_se(se_raw)
+
+    # merge dk and se migration data
+
+    migration = pd.merge(
+        df_dk,
+        df_se,
+        on=["municipality", "year", "age group", "to", "from", "net migration"],
+        how="outer",
+    )
+    migration["year"] = migration["year"].astype(str)
 
     # add data on internal migration
     gcr = pd.merge(
-        gcr_age, df_dk, on=["municipality", "year", "age group"], how="outer"
+        gcr_age, migration, on=["municipality", "year", "age group"], how="outer"
     )
 
     gcr["region"] = gcr.apply(fill_region_dk, axis=1)
