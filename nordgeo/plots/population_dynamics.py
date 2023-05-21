@@ -91,7 +91,7 @@ def scatter(year_from, year_to):
         hover_data=df.columns,
     ).update_layout(
         legend=dict(title="Municipality"),
-        title="Title",
+        title="Population change groups",
         xaxis_title="Change strength",
         yaxis_title="Median population change (%)",
     ).show()
@@ -125,7 +125,18 @@ def classes():
         .reset_index()
     )
 
-    display(class_df.groupby("m_class")["count"].sum().reset_index())
+    px.bar(
+        class_df.groupby(["municipality", "m_class"])["count"].sum().reset_index(),
+        x="m_class",
+        y="count",
+        color="municipality",
+        color_discrete_sequence=["blue"],
+        title="Classification of the municipalities by population change in 2019-2021",
+    ).update_layout(
+        xaxis_title="Class", yaxis_title="Count", legend=dict(title="Municipality")
+    ).show()
+
+    #  display(class_df.groupby("m_class")["count"].sum().reset_index())
 
     gdf = (
         df.drop("centroid", axis=1)
@@ -145,6 +156,7 @@ def classes():
         opacity=0.7,
         labels={"value": "Value"},
         height=800,
+        color_discrete_sequence=px.colors.sequential.RdBu[3:],
     ).update_layout(
         legend=dict(title="Population change trend"),
         title="Classification of the municipalities by population change in 2019-2021",
