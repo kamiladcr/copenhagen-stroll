@@ -1,17 +1,21 @@
 import os
-os.environ['USE_PYGEOS'] = '0'
+
+os.environ["USE_PYGEOS"] = "0"
 import geopandas as gpd
 from nordgeo import data
 import plotly.express as px
 
 # Municipal level population trend
 
+
 def show():
     df = data.load()
 
-    df.sort_values(['municipality', 'year'], inplace=True)
+    df.sort_values(["municipality", "year"], inplace=True)
 
-    df['population dynamics'] = (df["value_total"] - df["value_total_prev"]) / df["value_total_prev"] * 100
+    df["population dynamics"] = (
+        (df["value_total"] - df["value_total_prev"]) / df["value_total_prev"] * 100
+    )
 
     # previous_total_value = {}
     # for index, row in df.iterrows():
@@ -31,8 +35,8 @@ def show():
 
     # Working age group trend
     gdf = gpd.GeoDataFrame(df)
-    gdf = gdf.drop(['centroid'], axis=1)
-    gdf = gdf[gdf['year'] != "2018"]
+    gdf = gdf.drop(["centroid"], axis=1)
+    gdf = gdf[gdf["year"] != "2018"]
 
     # color_map = {
     #     'population increase': 'green',
@@ -40,25 +44,27 @@ def show():
     # }
 
     fig = px.choropleth_mapbox(
-        title='Population change by municipality',
+        title="Population change in 2019-2022",
         data_frame=gdf,
         geojson=gdf._to_geo(),
         featureidkey="properties.municipality",
-        locations='municipality',
-        #color='population trend',
-        color='population dynamics',
+        locations="municipality",
+        # color='population trend',
+        color="population dynamics",
         range_color=(-5, +5),
         color_continuous_scale="RdBu",
         # color_discrrete_map=color_map,
-        mapbox_style='carto-positron',
-        zoom=7,
-        center={'lat': 56.05, 'lon': 12.70},
+        mapbox_style="carto-positron",
+        zoom=6,
+        center={"lat": 56.05, "lon": 12.70},
         opacity=0.7,
-        labels={'value': 'Value'},
-        animation_frame='year',
-        height=1000,
+        labels={"value": "Value"},
+        animation_frame="year",
+        height=800,
     )
 
-    fig.update_layout(margin={'r': 0, 't': 0, 'l': 0, 'b': 0})
+    fig.update_layout(  # margin={'r': 0, 't': 0, 'l': 0, 'b': 0},
+        coloraxis_colorbar=dict(title="Population change (%)")
+    )
 
     fig.show()
